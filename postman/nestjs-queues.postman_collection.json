@@ -1,0 +1,93 @@
+{
+	"info": {
+		"_postman_id": "3a0a03be-a5c1-4461-98d8-ee61a30bf9c9",
+		"name": "nestjs-queues",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "2044165"
+	},
+	"item": [
+		{
+			"name": "Create queue and send messages",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/send?amount=100&routingKey=a.b.c&queue=temp-queue",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"send"
+					],
+					"query": [
+						{
+							"key": "amount",
+							"value": "100"
+						},
+						{
+							"key": "routingKey",
+							"value": "a.b.c"
+						},
+						{
+							"key": "queue",
+							"value": "temp-queue"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Enable consumer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/consume?queue=temp-queue",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"consume"
+					],
+					"query": [
+						{
+							"key": "queue",
+							"value": "temp-queue"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete consumer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/remove?queue=temp-queue",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"remove"
+					],
+					"query": [
+						{
+							"key": "queue",
+							"value": "temp-queue"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

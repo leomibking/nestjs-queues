@@ -1,0 +1,24 @@
+version: '3.7'
+
+volumes:
+  rabbitmq_data_b2b:
+  pg_data_b2b:
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.8.9-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    networks:
+      - redeb2b
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 15671:15671
+    volumes:
+      - rabbitmq_data_b2b:/var/lib/rabbitmq/
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+
+networks:
+  redeb2b:

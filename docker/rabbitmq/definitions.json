@@ -1,0 +1,29 @@
+{
+  "rabbit_version": "3.8.9",
+  "users": [
+    {
+      "name": "redeb2b",
+      "password": "redeb2b",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "redeb2b",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "parameters": [],
+  "policies": [],
+  "queues": [],
+  "exchanges": [],
+  "bindings": []
+}
