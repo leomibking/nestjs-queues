@@ -1,73 +1,83 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+## About
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
-```bash
-$ yarn install
+### Message creation
+Method:
+```text
+curl --location --request POST 'http://localhost:3000/send?amount=100&routingKey=a.b.c&queue=temp-queue'
 ```
 
-## Running the app
+In this method, we create a new queue and bind it to a routing key
+```typescript
+  private async assetQueue(queue: string, routingKey: string) {
+    console.log(`Assert queue ${queue}`);
+    await this.amqpConnection.channel.assertQueue(queue, {
+      durable: false,
+      autoDelete: true,
+    });
+    console.log(
+      `Bind queue ${queue} to exchange ${this.queue.exchange} and routing key ${routingKey}`,
+    );
+    await this.amqpConnection.channel.bindQueue(
+      queue,
+      this.queue.exchange,
+      routingKey,
+    );
+  }
+```
+### Parameters
+- **durable**: will keep the queue alive even if the server restarts (avoid losing messages)
+- **autoDelete**: delete the queue when there's no message and no consumer
 
-```bash
-# development
-$ yarn run start
+Then, we can publish messages to this queue
+```typescript
+  async sendMessages(amount: number, routingKey: string, queue: string) {
+    await this.assetQueue(queue, routingKey);
+    for (let i = 0; i < amount; i++) {
+      this.amqpConnection.publish(this.queue.exchange, routingKey, {
+        value: i,
+        date: Date.now(),
+      });
+    }
+    return 'OK';
+  }
+```
+In rabbitmq admin panel, we can see that the messages were created but there's no consumer attached to it.
+![img.png](img.png)
 
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+## Consume
+Method:
+```text
+curl --location --request POST 'http://localhost:3000/consume?queue=temp-queue'
 ```
 
-## Test
+To consume messages, we need to create a new consumer and bind it to the queue:
+```typescript
+  async consume(queue: string) {
+    console.log(`registering a consumer for queue ${queue}`);
 
-```bash
-# unit tests
-$ yarn run test
+    await this.amqpConnection.channel.consume(
+      queue,
+      (msg) => {
+        console.log(String(msg.content));
+        this.amqpConnection.channel.ack(msg);
+      },
+      { consumerTag: queue },
+    );
+  }
+```
+### Important
+- it's important to set the consumerTag correctly, because we'll need that information to remove the consumer.
 
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+## To remove temp queue
+Method:
+```text
+curl --location --request POST 'http://localhost:3000/remove?queue=temp-queue'
+```
+To remove the temp queue, we need to remove the consumer. To do so, we need to cancel it from the channel:
+```typescript
+  async remove(queue: string) {
+    console.log('Cancel consumer');
+    await this.amqpConnection.channel.cancel(queue);
+  }
 ```
 
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
