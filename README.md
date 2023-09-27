@@ -11,7 +11,7 @@ In this method, we create a new queue and bind it to a routing key
   private async assetQueue(queue: string, routingKey: string) {
     console.log(`Assert queue ${queue}`);
     await this.amqpConnection.channel.assertQueue(queue, {
-      durable: false,
+      durable: true,
       autoDelete: true,
     });
     console.log(
