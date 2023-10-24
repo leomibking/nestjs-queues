@@ -9,9 +9,16 @@ export class AppController {
   public async sendMessages(
     @Query('amount') amount: number,
     @Query('routingKey') routingKey: string,
-    @Query('queue') queue: string,
   ): Promise<string> {
-    return this.appService.sendMessages(amount, routingKey, queue);
+    return this.appService.sendMessages(amount, routingKey);
+  }
+
+  @Post('/create')
+  public async create(
+    @Query('routingKey') routingKey: string,
+    @Query('queue') queue: string,
+  ): Promise<void> {
+    return this.appService.create(queue, routingKey);
   }
 
   @Post('/consume')
@@ -19,8 +26,13 @@ export class AppController {
     return this.appService.consume(queue);
   }
 
-  @Post('/remove')
+  @Post('/pause')
   public async remove(@Query('queue') queue: string): Promise<void> {
-    return this.appService.remove(queue);
+    return this.appService.pause(queue);
+  }
+
+  @Post('/resume')
+  public async resume(@Query('queue') queue: string): Promise<void> {
+    return this.appService.resume(queue);
   }
 }
